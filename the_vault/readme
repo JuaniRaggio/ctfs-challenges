@@ -11,7 +11,7 @@ Para averiguar el gateway para llegar a cierto punto en internet
 ## SEGUNDA PREGUNTA:
 El router que expone este servidor HTTP también expone un servidor DNS
 ======================================================================
- ¿Cuál es el SERIAL de www.google.com según este?
+
 
 Para obtener la autoridad, hacemos la siguiente consulta
 --------------------------------------------------------
@@ -137,6 +137,39 @@ root@ctf-lab-jgarciavautrinraggi:/# dig @192.168.123.200 poponoto.google.com TXT
 root@ctf-lab-jgarciavautrinraggi:/# dig @192.168.123.200 anillos.google.com TXT +short
 "Hasta aca llego el easter egg. Basta de perder tiempo en un side quest. El siguiente subdominio es la password de la clave privada con la que entraste a the vault. Termine el ejercicio y luego vuelva."
 "El papel higienico no tiene olor. Le ponen 'fragancia a papel higienico'"
+
+
+root@ctf-lab-jgarciavautrinraggi:/# curl -X POST -H "Tiki: Taka" -H "Content-Type: application/json" -d '{"rta": "74757169"}' 192.168.123.200/ketylanuchi/response
+Acertado.
+
+Procedemos a /urururuluru para la tercer pregunta.
+
+root@ctf-lab-jgarciavautrinraggi:/# curl -X GET -H "Tiki: Taka" 192.168.123.200/urururuluru
+
+## TERCERA PREGUNTA: ¿Cuál es el contenido EN LENGUAJE ESPAÑOL del recurso /turulu?
+====================================================================================================
+root@ctf-lab-jgarciavautrinraggi:/# curl -X GET -H "Tiki: Taka" -H "lang: es" 192.168.123.200/turulu
+<h3>The cat is under the table</h3>
+====================================================================================================
+
+root@ctf-lab-jgarciavautrinraggi:/# curl -X GET -H "Tiki: Taka" -H "Accept-Language: es-ES" 192.168.123.200/turulu
+Hoy aprendimos a negociar contenido sobre HTTP
+
+root@ctf-lab-jgarciavautrinraggi:/# curl -X GET -H "Tiki: Taka" 192.168.123.200/papopepoparapapapapiparapopepo
+
+## CUARTA PREGUNTA
+
+El endpoint POST /maketoken?email=usuario@dominio es capaz de enviar mails secretos, pero no a cualquier dirección!
+
+Para recibir un mail, debe entrar a https://temp-mail.org/en/ donde automáticamente se le dará una casilla de email temporal.
+
+Usted debe utilizar su nueva casilla de emails para pedir un mail secreto. En este se encontrará un token generado únicamente para usted. Dicho token es la respuesta a esta pregunta.
+
+
+
+
+
+
 
 
 
