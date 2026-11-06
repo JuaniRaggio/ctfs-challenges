@@ -1,0 +1,6 @@
+Abrimos el archivo con wireshark para ver que hay adentro
+La info en telnet viaja en forma de texto plano y el servidor
+para "ocultar" la contraseña, lo unico que hace es no responder
+con la contraseña. Para escribir en la terminal, el servidor
+responde con cada tecla que introduce el usuario, por lo tanto
+es trivial resolver esto
