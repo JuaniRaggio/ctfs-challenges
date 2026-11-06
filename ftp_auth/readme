@@ -1,0 +1,5 @@
+Para analizar archivos pcap, usamos wireshark o tshark
+======================================================
+como no sabemos nada y tenemos el archivo local, uso wireshark
+facilmente se encuentra la password despues del handshake porque
+telnet usa texto plano asique tenemos toda la data
