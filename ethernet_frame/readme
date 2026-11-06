@@ -1,0 +1,13 @@
+Primero tenes que visualizar el hexa
+====================================
+cat ch12.txt | xxd -r -p
+
+
+Luego observamos que la salida termina en == asique intuimos que esta en base 64
+================================================================================
+Para hacer decodificacion de base64, hay que hacer:
+
+echo "salida" | base64 -d
+
+
+Finalmente obtuvimos: confi:dential
