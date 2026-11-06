@@ -1,0 +1,142 @@
+ip route add 192.168.124.0/24 via 192.168.123.200
+
+
+Para averiguar el gateway para llegar a cierto punto en internet
+================================================================
+[jgarciavautrinraggi@pampero ~]$ ip route get 1.1.1.1
+1.1.1.1 via 10.16.1.254 dev enp1s0 src 10.16.1.100 uid 63319
+    cache
+
+
+## SEGUNDA PREGUNTA:
+El router que expone este servidor HTTP también expone un servidor DNS
+======================================================================
+ ¿Cuál es el SERIAL de www.google.com según este?
+
+Para obtener la autoridad, hacemos la siguiente consulta
+--------------------------------------------------------
+
+root@ctf-lab-jgarciavautrinraggi:/# dig @192.168.123.200 www.google.com SOA
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.8-Ubuntu <<>> @192.168.123.200 www.google.com SOA
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 31540
+;; flags: qr aa rd; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: 6667521c00a905ca010000006aee4db939aae5480b8ea9b5 (good)
+;; QUESTION SECTION:
+;www.google.com.			IN	SOA
+
+;; ANSWER SECTION:
+www.google.com.		3600	IN	CNAME	google.com.
+google.com.		604800	IN	SOA	ns.google.com. noveaslostxt.google.com. 74757169 69 420 666 69
+
+;; Query time: 0 msec
+;; SERVER: 192.168.123.200#53(192.168.123.200) (UDP)
+;; WHEN: Fri Nov 06 21:59:21 UTC 2026
+;; MSG SIZE  rcvd: 137
+
+
+Nos dice "noveaslostxt.google.com" asique consultamos por txt:
+--------------------------------------------------------------
+root@ctf-lab-jgarciavautrinraggi:/# dig @192.168.123.200 www.google.com TXT
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.8-Ubuntu <<>> @192.168.123.200 www.google.com TXT
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 14849
+;; flags: qr aa rd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: 440ff37d2acc31a8010000006aee4e80984159ed84f2b9ad (good)
+;; QUESTION SECTION:
+;www.google.com.			IN	TXT
+
+;; ANSWER SECTION:
+www.google.com.		3600	IN	CNAME	google.com.
+google.com.		1	IN	TXT	"No pidas el TXT del subdominio 'easteregg'"
+google.com.		1	IN	TXT	"El trabajo infantil no existe porque los menores no pueden legalmente trabajar"
+
+;; Query time: 0 msec
+;; SERVER: 192.168.123.200#53(192.168.123.200) (UDP)
+;; WHEN: Fri Nov 06 22:02:40 UTC 2026
+;; MSG SIZE  rcvd: 231
+
+
+Para consultar un subdominio, hay que sacar el www
+--------------------------------------------------
+
+root@ctf-lab-jgarciavautrinraggi:/# dig @192.168.123.200 easteregg.google.com TXT
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.8-Ubuntu <<>> @192.168.123.200 easteregg.google.com TXT
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 59527
+;; flags: qr aa rd; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: 3e8a8daba0d6b661010000006aee50fcb204233ec9b1ffe2 (good)
+;; QUESTION SECTION:
+;easteregg.google.com.		IN	TXT
+
+;; ANSWER SECTION:
+easteregg.google.com.	69	IN	TXT	"Lo unico q te ta frenando de cagar en el piso son las reglas sociales de las que sos esclavo"
+easteregg.google.com.	69	IN	TXT	"Flaco q miras? Amablemente te pido q no mires el subdominio 'papanata'"
+
+;; Query time: 0 msec
+;; SERVER: 192.168.123.200#53(192.168.123.200) (UDP)
+;; WHEN: Fri Nov 06 22:13:16 UTC 2026
+;; MSG SIZE  rcvd: 265
+
+
+root@ctf-lab-jgarciavautrinraggi:/# dig @192.168.123.200 easteregg.google.com TXT
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.8-Ubuntu <<>> @192.168.123.200 easteregg.google.com TXT
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 59527
+;; flags: qr aa rd; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: 3e8a8daba0d6b661010000006aee50fcb204233ec9b1ffe2 (good)
+;; QUESTION SECTION:
+;easteregg.google.com.		IN	TXT
+
+;; ANSWER SECTION:
+easteregg.google.com.	69	IN	TXT	"Lo unico q te ta frenando de cagar en el piso son las reglas sociales de las que sos esclavo"
+easteregg.google.com.	69	IN	TXT	"Flaco q miras? Amablemente te pido q no mires el subdominio 'papanata'"
+
+;; Query time: 0 msec
+;; SERVER: 192.168.123.200#53(192.168.123.200) (UDP)
+;; WHEN: Fri Nov 06 22:13:16 UTC 2026
+;; MSG SIZE  rcvd: 265
+
+root@ctf-lab-jgarciavautrinraggi:/# dig @192.168.123.200 easteregg.google.com TXT +short
+"Lo unico q te ta frenando de cagar en el piso son las reglas sociales de las que sos esclavo"
+"Flaco q miras? Amablemente te pido q no mires el subdominio 'papanata'"
+root@ctf-lab-jgarciavautrinraggi:/# dig @192.168.123.200 papanata.google.com TXT +short
+"Cada vez que salis a correr extendes tu vida 20 minutos, pero te toma 30 + ducharte ((deberias))"
+"Por favor basta de seguir estos, no hay nada en 'poponoto'"
+root@ctf-lab-jgarciavautrinraggi:/# dig @192.168.123.200 poponoto.google.com TXT +short
+"No te voy a decir cual es el siguiente subdominio. Definitivamente no es la ultima palabra del otro txt"
+"La unica diferencia entre la biblia y el se\195\177or de los anillos es que sabemos quien escribio el se\195\177or de los anillos"
+root@ctf-lab-jgarciavautrinraggi:/# dig @192.168.123.200 anillos.google.com TXT +short
+"Hasta aca llego el easter egg. Basta de perder tiempo en un side quest. El siguiente subdominio es la password de la clave privada con la que entraste a the vault. Termine el ejercicio y luego vuelva."
+"El papel higienico no tiene olor. Le ponen 'fragancia a papel higienico'"
+
+
+
