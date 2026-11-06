@@ -166,10 +166,141 @@ Para recibir un mail, debe entrar a https://temp-mail.org/en/ donde automáticam
 Usted debe utilizar su nueva casilla de emails para pedir un mail secreto. En este se encontrará un token generado únicamente para usted. Dicho token es la respuesta a esta pregunta.
 
 
+Si vemos en el email, en la parte de text/plain, obtenemos el token
+===================================================================
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: base64
+
+UGVybyBxIGJ1ZW5vIHEgc295IGVzY29uZGllbmRvIG1lbnNhamVzIHhEeGQKCkVsIHRva2VuIGVzOiBiSFZqYUc4OWJIVmphRzg3Y25SaFBYTjBjbWx1WjE5bGNYVmhiSE09CgpTYWx1ZG9zCgo=
+
+
+Despues para decodificarlo es con echo "UGVy..." | base64 -d
+============================================================
+Pero q bueno q soy escondiendo mensajes xDxd
+
+El token es: bHVjaG89bHVjaG87cnRhPXN0cmluZ19lcXVhbHM=
+
+Saludos
+
+
+Notamos que el token esta tambien en base 64 asique tenemos que volver a decodificarlo
+======================================================================================
+lucho=lucho;rta=string_equals%
+
+OJO porque el token de arriba habia que mandarlo como estaba, si sirve decodificar denuevo para la siguiente pregunta:
+======================================================================================================================
+root@ctf-lab-jgarciavautrinraggi:/# curl -X GET 192.168.123.200/dalequevamooo
+## ÚLTIMA PREGUNTA!
+
+Sabiendo que este servidor no tiene estado (y por ende no se acuerda qué tokens emitió), ¿Cómo hace para saber que el token que recién ingresaste no fue inventado?
+
+La respuesta a esta pregunta se encuentra en el mismísimo token.
+
+
+root@ctf-lab-jgarciavautrinraggi:/# curl -X POST -H "Content-type: application/json" -d '{"rta": "string_equals"}' 192.168.123.200/dalequevamooo/response
+Felicidades!
+
+La respuesta es correcta; "string_equals".
+
+Esta también resulta ser **la contraseña de la clave SSH** de el servidor The Vault...
+
+(Si aún no sabés dónde encontrar esta clave, volvé al mensaje de email y leé entre las líneas...)
+
+;-)
 
 
 
+Agregamos una ruta para the vault y despues scaneamos los puertos efimeros
+==========================================================================
+root@ctf-lab-jgarciavautrinraggi:/# ip route add 6.9.4.0/24 via 192.168.123.69
+root@ctf-lab-jgarciavautrinraggi:/# nmap -sS 6.9.4.0
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2026-11-06 23:09 UTC
+Note: Host seems down. If it is really up, but blocking our ping probes, try -Pn
+Nmap done: 1 IP address (0 hosts up) scanned in 3.06 seconds
+root@ctf-lab-jgarciavautrinraggi:/# nmap -Pn 6.9.4.0
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2026-11-06 23:10 UTC
+Nmap scan report for 6.9.4.0
+Host is up (3.1s latency).
+All 1000 scanned ports on 6.9.4.0 are in ignored states.
+Not shown: 918 filtered tcp ports (no-response), 82 filtered tcp ports (host-unreach)
+
+Nmap done: 1 IP address (1 host up) scanned in 80.73 seconds
+root@ctf-lab-jgarciavautrinraggi:/# nmap -Pn 6.9.4.20
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2026-11-06 23:18 UTC
+Nmap scan report for 6.9.4.20
+Host is up (0.000012s latency).
+Not shown: 999 closed tcp ports (reset)
+PORT   STATE SERVICE
+22/tcp open  ssh
+
+Nmap done: 1 IP address (1 host up) scanned in 0.07 seconds
+root@ctf-lab-jgarciavautrinraggi:/# ssh 6.9.4.20
+The authenticity of host '6.9.4.20 (6.9.4.20)' can't be established.
+ED25519 key fingerprint is SHA256:wtVI1+OWE3QKocgYNWkYT0kpBiHJrfjvEwXgQ3G1TQA.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '6.9.4.20' (ED25519) to the list of known hosts.
+root@6.9.4.20: Permission denied (publickey).
+root@ctf-lab-jgarciavautrinraggi:/# nmap -Pn 6.9.4.20 -p-
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2026-11-06 23:19 UTC
+Nmap scan report for 6.9.4.20
+Host is up (0.000012s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT      STATE SERVICE
+22/tcp    open  ssh
+49681/tcp open  unknown
+
+Nmap done: 1 IP address (1 host up) scanned in 1.16 seconds
 
 
 
+Luego como sabemos por el mail que nos mandaron que hay un servidor http abierto
+entre el puerto 49000 y 50000, por lo que ese puerto tcp abierto es http, asi
+que hacemos curl:
 
+root@ctf-lab-jgarciavautrinraggi:/# curl -L 6.9.4.20:49681
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Directory listing for /</title>
+</head>
+<body>
+<h1>Directory listing for /</h1>
+<hr>
+<ul>
+<li><a href="cat.jpg">cat.jpg</a></li>
+<li><a href="IMPORTANTE_NOMBRE_DE_USUARIO.txt">IMPORTANTE_NOMBRE_DE_USUARIO.txt</a></li>
+<li><a href="supersecretkey">supersecretkey</a></li>
+</ul>
+<hr>
+</body>
+</html>
+
+
+
+Luego vamos al endpoint con el nombre de usuario importante
+===========================================================
+
+root@ctf-lab-jgarciavautrinraggi:/# curl -L 6.9.4.20:49681/IMPORTANTE_NOMBRE_DE_USUARIO.txt
+IMPORTANTE!!!
+
+El nombre de usuario de tu servidor SSH es "bububu"
+
+NO TE OLVIDES
+
+
+Luego vamos al endpoint de supersecretkey
+=========================================
+root@ctf-lab-jgarciavautrinraggi:/# curl -L 6.9.4.20:49681/supersecretkey
+-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAACmFlczI1Ni1jdHIAAAAGYmNyeXB0AAAAGAAAABATA5pmIP
+6WooyWgFgxXBcSAAAAGAAAAAEAAAAzAAAAC3NzaC1lZDI1NTE5AAAAIPlsdzC/gLjHPAoY
+1mMIRwysajKexJJU2cPk2ZvewQGWAAAAoHIL7cMHsq/HSBaRkKVbJQeXJCErq2NSC2Q/zH
+GSdh8LQGFxOsHAJ5K76hbwuc38oNu7ckE8U1E/UeOsP87nlNBSntlyt7jthkuxlOml5pq+
+erJpvzI/KuuecXXT36pHq7rxcTw3AvGHqgXUZ+tYz8aeVfl63t0u9O55P218+xo9PwGPCT
+fY1kO3fVieDYOQeF5hCG4Dfya2gYC7H7CxHQE=
+-----END OPENSSH PRIVATE KEY-----
+
+
+Despues para decriptarla, tiene una contraseña que ya nos la dijeron que es "string_equals"
