@@ -1,3 +1,5 @@
+Este comando es CLAVE => si tu servidor no sabe llegar a una ip pero sabes la topologia de la red, le podes decir a tu kernel como llegar
+=========================================================================================================================================
 ip route add 192.168.124.0/24 via 192.168.123.200
 
 
